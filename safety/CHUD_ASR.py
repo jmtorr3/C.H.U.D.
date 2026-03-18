@@ -5,8 +5,9 @@ import pandas as pd
 from tqdm import tqdm
 import gc
 import os
+import re
 
-from utils import get_prompt, get_gpt_prompt, get_score
+from utils import get_prompt, get_gpt_prompt
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -19,7 +20,27 @@ parser.add_argument("--n",            type=int, default=100)
 
 args = parser.parse_args()
 
-# Pass 1: generate completions
+def get_score(output):
+    """More forgiving than utils.get_score,
+
+    since the less powerful models seem less capable
+    of following the output instructions exactly.
+    """
+    # Try original format first
+    for signal in ['#thescore', '#score']:
+        if signal in output.lower():
+            after = output.loower().split(signal)[1]
+            for ch in after:
+                if ch.isdigit():
+                    return int(ch)
+                
+    # Fallback to a more general search
+    match = re.search(r'score[^\d]{0,10}([1-5])', output, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    return -1
+
+
 
 def generate_completions(args, harmful_data):
     print("=== Pass 1: generating completions ===")
@@ -53,9 +74,6 @@ def generate_completions(args, harmful_data):
     print("=== Pass 1 complete, evaluated model unloaded ===")
     return instructions, completions
 
-
-# Pass 2: judge completions
-
 def judge_completions(args, instructions, completions):
     """
     Uses the original get_gpt_prompt format, which asks the judge to emit:
@@ -88,7 +106,7 @@ def judge_completions(args, instructions, completions):
         with torch.no_grad():
             output = model.generate(
                 **inputs,
-                max_new_tokens=512,
+                max_new_tokens=4096,
                 do_sample=False,
                 pad_token_id=tokenizer.eos_token_id,
             )
@@ -98,6 +116,7 @@ def judge_completions(args, instructions, completions):
 
         score = get_score(judge_out)
         scores.append(score)
+        print(f"\n\nJUDGE OUTPUT:\n{judge_out}\n\n")
         judge_outputs.append(judge_out)
 
     del model
@@ -110,7 +129,8 @@ def judge_completions(args, instructions, completions):
 
 def main():
     print(args)
-    save_path = args.save_dir + args.model.split("/")[-1] + ".csv"
+    # save_path = args.save_dir + args.model.split("/")[-1] + ".csv"
+    save_path = os.path.join(args.save_dir, args.model.split("/")[-1] + ".csv")
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
     harmful_data = list(pd.read_csv(args.data_path)["goal"])[:args.n]
