@@ -1,5 +1,6 @@
 # C.H.U.D - Catastrophic Harmful Update Detection
 
+![chud](chud.png)
 
 ## Setup
 The original paper left us some helpful scripts and instructions:
