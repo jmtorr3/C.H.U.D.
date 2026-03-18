@@ -32,9 +32,9 @@ Run with:
 python safety/CHUD_ASR.py \
     --model models/Llama-2-7b-LoX
 ```
-> Use a local judge model with `--judge-model`, or stream `Meta-Llama-3-8b-Instruct` from huggingface. Output is saved to `eval/gens.csv` by default.
+> Use a local judge model with `--judge-model`, or stream `Meta-Llama-3.1-8b-Instruct` from huggingface. Output is saved to `eval/gens.csv` by default. 
 
-> Generating model responses takes ~10 seconds per sample for the LoX'd model, default is 100 samples (use `--n` to change).
+> Generating model responses takes ~10 seconds per sample for the LoX'd model, default is 100 samples (use `--n` to change). I recommend testing first with like ~5 samples to catch any auth errors before you sink time into a more complete evaluation.
 > Judging each model response takes ...
 
 
