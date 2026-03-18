@@ -1,5 +1,7 @@
 # Lox: Low-Rank Extrapolation Robustifies LLM Safety Against Fine-tuning
 
+## > See [`CHUD.md`](./CHUD.md) for notes on our contributions.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![arXiv](https://img.shields.io/badge/arXiv-2506.15606-b31b1b.svg)](https://arxiv.org/abs/2506.15606) [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/VITA-Group/LoX)
 
 Official PyTorch Code for Paper: "Lox: Low-Rank Extrapolation Robustifies LLM Safety Against Fine-tuning", **Gabriel J. Perin¹, Runjin Chen², Xuxi Chen², Nina S. T. Hirata¹, Zhangyang Wang², and Junyuan Hong²**,
