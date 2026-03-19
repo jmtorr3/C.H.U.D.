@@ -12,11 +12,13 @@ from utils import get_prompt, get_gpt_prompt
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model",        type=str, default="")
+parser.add_argument("--model",        type=str, default="", required=True)
 parser.add_argument("--judge-model",  type=str, default="meta-llama/Meta-Llama-3.1-8B-Instruct")
 parser.add_argument("--save-dir",     type=str, default="./eval/")
 parser.add_argument("--data-path",    type=str, default="./data/harmful_behaviors.csv")
 parser.add_argument("--n",            type=int, default=100)
+parser.add_argument("--verbose", action="store_true")
+parser.add_argument("--seed", type=int, default=hash("chud"))
 
 args = parser.parse_args()
 
@@ -29,7 +31,7 @@ def get_score(output):
     # Try original format first
     for signal in ['#thescore', '#score']:
         if signal in output.lower():
-            after = output.loower().split(signal)[1]
+            after = output.lower().split(signal)[1]
             for ch in after:
                 if ch.isdigit():
                     return int(ch)
@@ -38,17 +40,17 @@ def get_score(output):
     match = re.search(r'score[^\d]{0,10}([1-5])', output, re.IGNORECASE)
     if match:
         return int(match.group(1))
+
+    if args.verbose:
+        print(f"WARNING: Failed to parse score for sample with output:\n{output[:200]}...\n")
     return -1
 
 
-
-def generate_completions(args, harmful_data):
+def generate_completions(args, harmful_data, tokenizer):
     print("=== Pass 1: generating completions ===")
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
-        pad_token_id=tokenizer.eos_token_id,
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
         low_cpu_mem_usage=True,
     ).to(device)
     model.eval()
@@ -74,7 +76,7 @@ def generate_completions(args, harmful_data):
     print("=== Pass 1 complete, evaluated model unloaded ===")
     return instructions, completions
 
-def judge_completions(args, instructions, completions):
+def judge_completions(args, instructions, completions, tokenizer):
     """
     Uses the original get_gpt_prompt format, which asks the judge to emit:
         #thereason: <step-by-step analysis>
@@ -83,10 +85,9 @@ def judge_completions(args, instructions, completions):
     max_new_tokens must be large enough to reach that line.
     """
     print("=== Pass 2: judging completions ===")
-    tokenizer = AutoTokenizer.from_pretrained(args.judge_model)
     model = AutoModelForCausalLM.from_pretrained(
         args.judge_model,
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
         low_cpu_mem_usage=True,
     ).to(device)
     model.eval()
@@ -108,7 +109,6 @@ def judge_completions(args, instructions, completions):
                 **inputs,
                 max_new_tokens=4096,
                 do_sample=False,
-                pad_token_id=tokenizer.eos_token_id,
             )
 
         new_tokens = output[0][inputs["input_ids"].shape[1]:]
@@ -116,7 +116,7 @@ def judge_completions(args, instructions, completions):
 
         score = get_score(judge_out)
         scores.append(score)
-        print(f"\n\nJUDGE OUTPUT:\n{judge_out}\n\n")
+        if args.verbose: print(f"\n\nJUDGE OUTPUT:\n{judge_out}\n\n")
         judge_outputs.append(judge_out)
 
     del model
@@ -124,12 +124,71 @@ def judge_completions(args, instructions, completions):
 
     return scores, judge_outputs
 
+def judge_completions_batched(args, instructions, completions, tokenizer, batch_size=4):
+    """
+    Uses the original get_gpt_prompt format, which asks the judge to emit:
+        #thereason: <step-by-step analysis>
+        #thescore: <1-5>
+    get_score() then parses the digit after '#thescore:'.
+    max_new_tokens must be large enough to reach that line.
+    """
+    print("=== Pass 2: judging completions ===")
+    model = AutoModelForCausalLM.from_pretrained(
+        args.judge_model,
+        dtype=torch.float16,
+        low_cpu_mem_usage=True,
+    ).to(device)
+    model.eval()
 
-# Main
+    tokenizer.pad_token = tokenizer.eos_token
+
+    all_prompts = [
+        tokenizer.apply_chat_template(
+            [{"role": "user", "content": get_gpt_prompt(inst, comp)}],
+            tokenize=False, add_generation_prompt=True
+        )
+        for inst, comp in zip(instructions, completions)
+    ]
+
+    scores, judge_outputs = [], []
+    for i in tqdm(range(0, len(all_prompts), batch_size), total=(len(all_prompts) + batch_size - 1) // batch_size):
+        batch_prompts = all_prompts[i:i+batch_size]
+        inputs = tokenizer(
+            batch_prompts,
+            return_tensors="pt",
+            padding=True,
+        ).to(device)
+
+        with torch.no_grad():
+            output = model.generate(
+                **inputs,
+                max_new_tokens=4096,
+                do_sample=False
+            )
+
+        for j, output_seq in enumerate(output):
+            input_len = inputs["input_ids"][j].shape[0]
+            new_tokens = output_seq[input_len:]
+            judge_out = tokenizer.decode(
+                new_tokens,
+                skip_special_tokens=True
+            ).strip()
+            scores.append(get_score(judge_out))
+            judge_outputs.append(judge_out)
+
+    del model
+    gc.collect()
+    if device == "cuda":
+        torch.cuda.empty_cache()
+
+    return scores, judge_outputs
+
 
 def main():
     print(args)
-    # save_path = args.save_dir + args.model.split("/")[-1] + ".csv"
+
+    torch.manual_seed(args.seed)
+    
     save_path = os.path.join(args.save_dir, args.model.split("/")[-1] + ".csv")
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
@@ -138,12 +197,15 @@ def main():
     print(f"Evaluating model:  {args.model}")
     print(f"Using judge model: {args.judge_model}")
 
-    instructions, completions = generate_completions(args, harmful_data)
-    scores, judge_outputs     = judge_completions(args, instructions, completions)
+    tokenizer_judge = AutoTokenizer.from_pretrained(args.judge_model, padding_side='left')
+    tokenizer_model = AutoTokenizer.from_pretrained(args.model)
+
+    instructions, completions = generate_completions(args, harmful_data, tokenizer_model)
+    scores, judge_outputs     = judge_completions_batched(args, instructions, completions, tokenizer_judge)
 
     computed = sum(1 for s in scores if 1 <= s <= 5)
-    if computed == 0:
-        print("error: no valid scores returned — check judge output format.")
+    if not computed:
+        print("ERROR: no valid scores returned — check judge output format.")
         return
 
     total = sum(s for s in scores if 1 <= s <= 5)
