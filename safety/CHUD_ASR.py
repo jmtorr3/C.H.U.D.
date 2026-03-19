@@ -46,83 +46,128 @@ def get_score(output):
     return -1
 
 
-def generate_completions(args, harmful_data, tokenizer):
-    print("=== Pass 1: generating completions ===")
+# def generate_completions(args, harmful_data, tokenizer):
+#     print("=== Pass 1: generating completions ===")
+#     model = AutoModelForCausalLM.from_pretrained(
+#         args.model,
+#         dtype=torch.float16,
+#         low_cpu_mem_usage=True,
+#     ).to(device)
+#     model.eval()
+
+#     instructions, completions = [], []
+
+#     for instruction in tqdm(harmful_data):
+#         prompt, prompt_size = get_prompt(instruction)
+#         inputs = tokenizer(prompt, return_tensors="pt").to(device)
+
+#         with torch.no_grad():
+#             output = model.generate(**inputs, max_new_tokens=512, do_sample=False)
+
+#         new_tokens = output[0][inputs["input_ids"].shape[1]:]
+#         text = tokenizer.decode(output[0], skip_special_tokens=True)
+#         instructions.append(instruction)
+#         completions.append(text if text else "[EMPTY ANSWER]")
+
+#     del model
+#     gc.collect()
+#     if device == "cuda":
+#         torch.cuda.empty_cache()
+
+#     print("=== Pass 1 complete, evaluated model unloaded ===")
+#     return instructions, completions
+
+# def judge_completions(args, instructions, completions, tokenizer):
+#     """
+#     Uses the original get_gpt_prompt format, which asks the judge to emit:
+#         #thereason: <step-by-step analysis>
+#         #thescore: <1-5>
+#     get_score() then parses the digit after '#thescore:'.
+#     max_new_tokens must be large enough to reach that line.
+#     """
+#     print("=== Pass 2: judging completions ===")
+#     model = AutoModelForCausalLM.from_pretrained(
+#         args.judge_model,
+#         dtype=torch.float16,
+#         low_cpu_mem_usage=True,
+#     ).to(device)
+#     model.eval()
+
+#     scores, judge_outputs = [], []
+
+#     for instruction, completion in tqdm(zip(instructions, completions), total=len(instructions)):
+#         # get_gpt_prompt is self-contained
+#         messages = [
+#             {"role": "user", "content": get_gpt_prompt(instruction, completion)},
+#         ]
+#         prompt = tokenizer.apply_chat_template(
+#             messages, tokenize=False, add_generation_prompt=True
+#         )
+#         inputs = tokenizer(prompt, return_tensors="pt").to(device)
+
+#         with torch.no_grad():
+#             output = model.generate(
+#                 **inputs,
+#                 max_new_tokens=512,
+#                 do_sample=False,
+#             )
+
+#         new_tokens = output[0][inputs["input_ids"].shape[1]:]
+#         judge_out = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+#         score = get_score(judge_out)
+#         scores.append(score)
+#         if args.verbose: print(f"\n\nJUDGE OUTPUT:\n{judge_out}\n\n")
+#         judge_outputs.append(judge_out)
+
+#     del model
+#     gc.collect()
+
+#     return scores, judge_outputs
+
+def generate_completions_batched(args, harmful_data, tokenizer, batch_size=4):
+    """Pass number 1, test the model by prompting it with harmful data.
+
+    Improves upong generate_completions by batching generation.
+    """
     model = AutoModelForCausalLM.from_pretrained(
-        args.model,
-        dtype=torch.float16,
-        low_cpu_mem_usage=True,
+        args.model, dtype=torch.float16, low_cpu_mem_usage=True
     ).to(device)
     model.eval()
+    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "left"
 
+    prompts = [get_prompt(instruction)[0] for instruction in harmful_data]
     instructions, completions = [], []
 
-    for instruction in tqdm(harmful_data):
-        prompt, prompt_size = get_prompt(instruction)
-        inputs = tokenizer(prompt, return_tensors="pt").to(device)
-
-        with torch.no_grad():
-            output = model.generate(**inputs, max_new_tokens=60, do_sample=False)
-
-        text = tokenizer.decode(output[0], skip_special_tokens=True)[prompt_size:]
-        instructions.append(instruction)
-        completions.append(text if text else "[EMPTY ANSWER]")
-
-    del model
-    gc.collect()
-    if device == "cuda":
-        torch.cuda.empty_cache()
-
-    print("=== Pass 1 complete, evaluated model unloaded ===")
-    return instructions, completions
-
-def judge_completions(args, instructions, completions, tokenizer):
-    """
-    Uses the original get_gpt_prompt format, which asks the judge to emit:
-        #thereason: <step-by-step analysis>
-        #thescore: <1-5>
-    get_score() then parses the digit after '#thescore:'.
-    max_new_tokens must be large enough to reach that line.
-    """
-    print("=== Pass 2: judging completions ===")
-    model = AutoModelForCausalLM.from_pretrained(
-        args.judge_model,
-        dtype=torch.float16,
-        low_cpu_mem_usage=True,
-    ).to(device)
-    model.eval()
-
-    scores, judge_outputs = [], []
-
-    for instruction, completion in tqdm(zip(instructions, completions), total=len(instructions)):
-        # get_gpt_prompt is self-contained
-        messages = [
-            {"role": "user", "content": get_gpt_prompt(instruction, completion)},
-        ]
-        prompt = tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
-        )
-        inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    for i in tqdm(range(0, len(prompts), batch_size)):
+        batch_prompts = prompts[i:i + batch_size]
+        inputs = tokenizer(
+            batch_prompts,
+            return_tensors='pt',
+            padding=True
+        ).to(device)
 
         with torch.no_grad():
             output = model.generate(
                 **inputs,
-                max_new_tokens=4096,
-                do_sample=False,
+                max_new_tokens=512,
+                do_sample=False
             )
 
-        new_tokens = output[0][inputs["input_ids"].shape[1]:]
-        judge_out = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+        for j, seq in enumerate(output):
+            input_len = inputs["input_ids"][j].shape[0]
+            text = tokenizer.decode(seq[input_len:], skip_special_tokens=True)
+            instructions.append(harmful_data[i+j])
+            completions.append(text.strip() if text.strip() else "[EMPTY ANSWER]")
 
-        score = get_score(judge_out)
-        scores.append(score)
-        if args.verbose: print(f"\n\nJUDGE OUTPUT:\n{judge_out}\n\n")
-        judge_outputs.append(judge_out)
-
-    del model
+    del model; 
     gc.collect()
+    if device == "cuda": 
+        torch.cuda.empty_cache()
 
-    return scores, judge_outputs
+    return instructions, completions
+
 
 def judge_completions_batched(args, instructions, completions, tokenizer, batch_size=4):
     """
@@ -162,7 +207,7 @@ def judge_completions_batched(args, instructions, completions, tokenizer, batch_
         with torch.no_grad():
             output = model.generate(
                 **inputs,
-                max_new_tokens=4096,
+                max_new_tokens=512,
                 do_sample=False
             )
 
@@ -200,7 +245,7 @@ def main():
     tokenizer_judge = AutoTokenizer.from_pretrained(args.judge_model, padding_side='left')
     tokenizer_model = AutoTokenizer.from_pretrained(args.model)
 
-    instructions, completions = generate_completions(args, harmful_data, tokenizer_model)
+    instructions, completions = generate_completions_batched(args, harmful_data, tokenizer_model)
     scores, judge_outputs     = judge_completions_batched(args, instructions, completions, tokenizer_judge)
 
     computed = sum(1 for s in scores if 1 <= s <= 5)
