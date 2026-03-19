@@ -19,6 +19,7 @@ parser.add_argument("--data-path",    type=str, default="./data/harmful_behavior
 parser.add_argument("--n",            type=int, default=100)
 parser.add_argument("--verbose", action="store_true")
 parser.add_argument("--seed", type=int, default=hash("chud"))
+parser.add_argument("--batch-size", type=int, default=4)
 
 args = parser.parse_args()
 
@@ -125,13 +126,13 @@ def get_score(output):
 
 #     return scores, judge_outputs
 
-def generate_completions_batched(args, harmful_data, tokenizer, batch_size=4):
+def generate_completions_batched(args, harmful_data, tokenizer):
     """Pass number 1, test the model by prompting it with harmful data.
 
     Improves upong generate_completions by batching generation.
     """
     model = AutoModelForCausalLM.from_pretrained(
-        args.model, dtype=torch.float16, low_cpu_mem_usage=True
+        args.model, dtype=torch.float16, low_cpu_mem_usage=True,
     ).to(device)
     model.eval()
     tokenizer.pad_token = tokenizer.eos_token
@@ -140,8 +141,8 @@ def generate_completions_batched(args, harmful_data, tokenizer, batch_size=4):
     prompts = [get_prompt(instruction)[0] for instruction in harmful_data]
     instructions, completions = [], []
 
-    for i in tqdm(range(0, len(prompts), batch_size)):
-        batch_prompts = prompts[i:i + batch_size]
+    for i in tqdm(range(0, len(prompts), args.batch_size)):
+        batch_prompts = prompts[i:i + args.batch_size]
         inputs = tokenizer(
             batch_prompts,
             return_tensors='pt',
@@ -169,7 +170,7 @@ def generate_completions_batched(args, harmful_data, tokenizer, batch_size=4):
     return instructions, completions
 
 
-def judge_completions_batched(args, instructions, completions, tokenizer, batch_size=4):
+def judge_completions_batched(args, instructions, completions, tokenizer):
     """
     Uses the original get_gpt_prompt format, which asks the judge to emit:
         #thereason: <step-by-step analysis>
@@ -196,8 +197,8 @@ def judge_completions_batched(args, instructions, completions, tokenizer, batch_
     ]
 
     scores, judge_outputs = [], []
-    for i in tqdm(range(0, len(all_prompts), batch_size), total=(len(all_prompts) + batch_size - 1) // batch_size):
-        batch_prompts = all_prompts[i:i+batch_size]
+    for i in tqdm(range(0, len(all_prompts), args.batch_size), total=(len(all_prompts) + args.batch_size - 1) // args.batch_size):
+        batch_prompts = all_prompts[i:i+args.batch_size]
         inputs = tokenizer(
             batch_prompts,
             return_tensors="pt",
