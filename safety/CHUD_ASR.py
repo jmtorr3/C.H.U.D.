@@ -153,7 +153,11 @@ def generate_completions_batched(args, harmful_data, tokenizer):
             output = model.generate(
                 **inputs,
                 max_new_tokens=512,
-                do_sample=False
+                do_sample=False,
+                temperature=0.7,
+                top_p=0.9,
+                top_k=50,
+                repetition_penalty=1.2
             )
 
         for j, seq in enumerate(output):
