@@ -25,8 +25,8 @@ python safety/CHUD_LoX.py \
 
 
 ## Evaluation (ASR)
-The original paper used OpenAI's `gpt-4o-mini` for evaluations, which is a paid model. Since their scoring evaluation was on a range of 1-5, we can't use a guard model, so we'll use Meta's [`Llama-3-8B-instruct`](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct) (~32.1Gb).
-> We could also take advantage of Meta's specially trained Guard models, but we'd have to revise the prompt (see [`utils.py`](./safety/utils.py)) and metric scripts.
+The original paper used OpenAI's `gpt-4o-mini` for evaluations, which is a paid model. Their scoring evaluation was based on a 1-5 range, but we'll use a guard model (as per prof's recommendation) that will just use a binary 'safe' vs. 'unsafe' scoring model. To this end, I've revised the `utils.py` prompt and scoring helpers and `CHUD_ASR.py` to use the [`Llama-Guard-38-B`](https://huggingface.co/meta-llama/Llama-Guard-3-8B). 
+> Either download the guard model and use locally, or stream with transformers (default config, ~16GB).
 
 Run with:
 ```bash
@@ -35,8 +35,13 @@ python safety/CHUD_ASR.py \
 ```
 > Use a local judge model with `--judge-model`, or stream `Meta-Llama-3.1-8b-Instruct` from huggingface. Output is saved to `eval/gens.csv` by default. 
 
-> Generating model responses takes ~10 seconds per sample for the LoX'd model, default is 100 samples (use `--n` to change). I recommend testing first with like ~5 samples to catch any auth errors before you sink time into a more complete evaluation.
-> Judging each model response takes ...
+> Generating model responses takes ~30 seconds per sample for the LoX'd model, default is 100 samples (use `--n` to change). I recommend testing first with like ~5 samples to catch any auth errors before you sink time into a more complete evaluation.
+>
+> Judging each model response takes ~15 seconds per sample with the LLama Guard model.
+>
+> Saves to the output csv `eval/` by default, use `--save-dir` to change. 
 
+## Fine-Tuning
+We'll need to use a PEFT adapter since we are memory limited. QLORA makes the most sense here. [Here](https://mlflow.org/docs/latest/ml/deep-learning/transformers/tutorials/fine-tuning/transformers-peft/) is a good reference.
 
-## Fine-Tuning (Sequential Attack) - WIP
+> See LoX paper section 5. for fine-tuning parameters on various datasets and across ablation studies.
