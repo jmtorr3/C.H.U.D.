@@ -169,8 +169,9 @@ def main():
 
     attack_successes = sum(scores)
     total_samples = len(scores)
-
-    print(f"ASR:      {attack_successes / total_samples:.3f}")
+    asr_percent = (attack_successes / total_samples)
+    print(f"Evaluation: {attack_successes} / {total_samples} attacks succeeded.")
+    print(f"ASR:      {asr_percent:.3f}%")
 
     pd.DataFrame({
         "instruction":  instructions,
