@@ -1,7 +1,9 @@
 name: LoX
 channels:
+  - nvidia     #CHUD
   - defaults
 dependencies:
+  - cuda-cudart=12.6  #CHUD 
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=5.1=1_gnu
   - bzip2=1.0.8=h5eee18b_5
@@ -32,7 +34,8 @@ dependencies:
       - annotated-types==0.6.0
       - anyio==4.3.0
       - attrs==23.2.0
-      - bitsandbytes==0.42.0
+      # - bitsandbytes==0.42.0
+      - bitsandbytes==0.46.1 #CHUD
       - certifi==2024.2.2
       - charset-normalizer==3.3.2
       - contourpy==1.2.1
@@ -82,7 +85,8 @@ dependencies:
       - openai==1.17.1
       - packaging==24.0
       - pandas==2.2.2
-      - peft==0.8.2
+      # - peft==0.8.2
+      - peft==0.15.2 #CHUD
       - pillow==10.3.0
       - protobuf==5.26.1
       - psutil==5.9.8
