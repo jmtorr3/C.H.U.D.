@@ -51,7 +51,9 @@ python fine-tuning-attacks/CHUD_finetune.py \
   --data-path data/gsm/train.jsonl \
   --save-dir models/benign/
  ```
- Which will save the trained PEFT adapter to `models/benign/`. This fine-tunes 10 samples in well under a minute.
+ Which will save the trained PEFT adapter to `models/benign/`. This fine-tunes 10 samples in well under a minute, 500 samples in ~20 mins.
 > You may have to recreate the conda environment, since I've changed [`environment.yaml`](./environment.yaml) to support this script. 
 
 > We still need to align the fine-tuning hyperparameters as per the LoX paper (see section 5).
+
+We need to determine (ask prof) if QLoRA is a reasonable mechanism for exploiting catastrophic forgetting.
