@@ -44,4 +44,14 @@ python safety/CHUD_ASR.py \
 ## Fine-Tuning
 We'll need to use a PEFT adapter since we are memory limited. QLORA makes the most sense here. [Here](https://mlflow.org/docs/latest/ml/deep-learning/transformers/tutorials/fine-tuning/transformers-peft/) is a good reference.
 
-> See LoX paper section 5. for fine-tuning parameters on various datasets and across ablation studies.
+ See the implementation (WIP) at [`fine-tuning-attacks/CHUD_finetune.py`](./fine-tuning-attacks/CHUD_finetune.py). Run with:
+ ```bash
+python fine-tuning-attacks/CHUD_finetune.py \
+  --model meta-llama/Llama-2-7b-chat-hf \
+  --data-path data/gsm/train.jsonl \
+  --save-dir models/benign/
+ ```
+ Which will save the trained PEFT adapter to `models/benign/`. This fine-tunes 10 samples in well under a minute.
+> You may have to recreate the conda environment, since I've changed [`environment.yaml`](./environment.yaml) to support this script. 
+
+> We still need to align the fine-tuning hyperparameters as per the LoX paper (see section 5).
