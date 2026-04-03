@@ -1,3 +1,7 @@
+# conda install -c nvidia cuda-cudart
+# export LD_LIBRARY_PATH=/home/ajl64/home/ajl64/miniconda3/envs/LoX/libcudart.so.12
+
+import bitsandbytes
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -15,15 +19,16 @@ import os
 import re
 import time
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from datasets import load_dataset
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = "cuda" if torch.cuda.is_available() else "cpu"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model",        type=str, default="", required=True)
-parser.add_argument("--data",         type=str, default="", required=True)
-parser.add_argument("--save-dir",     type=str, default="./models/adapters/")
+parser.add_argument("--data-path",    type=str, default="", required=True)
+parser.add_argument("--save-dir",     type=str, default="", required=True)
 parser.add_argument("--n",            type=int, default=100)
-parser.add_argument("--seed", type=int, default=hash("chud"))
+parser.add_argument("--seed", type=int, default=abs(hash("chud")))
 
 args = parser.parse_args()
 
@@ -34,7 +39,7 @@ BNB_CONFIG = BitsAndBytesConfig(
     bnb_4bit_use_double_quant=True,
 )
 
-def train(model, samples):
+def train(model, tokenizer, samples):
     TRAINING_ARGS = TrainingArguments(
         output_dir=args.save_dir,
         per_device_train_batch_size=2,
@@ -44,29 +49,50 @@ def train(model, samples):
         fp16=True,
         logging_steps=10,
         save_steps=100,
-        optim="paged_adamw_8bit",
-    )
-    
-    trainer = Trainer(
-        model=model,
-        args=TRAINING_ARGS,
-        train_dataset=samples
+        optim="paged_adamw_8bit"
     )
 
-    """
     trainer = SFTTrainer(
         model=model,
         train_dataset=samples,
-        tokenizer=tokenizer,
-        args=TRAINING_ARGS,
-        dataset_text_field="text",
-        max_seq_length=512,
+        processing_class=tokenizer,
+        args=TRAINING_ARGS
+        # dataset_text_field="text", #Should automatically use the only text field.
     )
-    
-    """
-
     trainer.train()
 
+def load_samples():
+    
+    try:
+        dataset = load_dataset(
+            "json",
+            data_files={"train": args.data_path},
+        )["train"]
+    except Exception as e:
+        raise e
+    finally:
+        print("May need to manually specifiy the type of the dataset being loaded here!\n\t- Expects a json file.")
+
+    format_sample = lambda sample: {
+            "text" : 
+            f"<s>[INST] {sample["question"].strip()}"            
+            f"  [/INST] {sample["answer"].strip()}</s>"
+        }
+    
+    n = args.n
+    if args.n > len(dataset):
+        print(f"Warning: sample size {n} is greater than the size of the dataset {args.data_path}")
+        print(f"\t- Taking only {len(dataset)} samples.")
+        n = len(dataset)
+
+    dataset = dataset.shuffle(seed=args.seed) # shuffle
+    dataset = dataset.select(range(n)) # select n samples
+    samples = dataset.map(format_sample) # convert samples to chat format
+
+    print(f"\nData sample:\n{samples[0]['text']}\n")
+
+    return samples
+    
 def main():
     print(args)
 
@@ -93,16 +119,13 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     tokenizer.pad_token = tokenizer.eos_token
 
-    # 2. Load dataset...
-    #TODO
-    samples = ...
+    # 2. Load samples from dataset...
+    samples = load_samples()
 
-    # 2. Train and save
-    train(model, samples)
+    # 3. Train and save
+    train(model, tokenizer, samples)
     model.save_pretrained(args.save_dir)
     tokenizer.save_pretrained(args.save_dir)
-    
-
 
 if __name__ == "__main__":
     main()
