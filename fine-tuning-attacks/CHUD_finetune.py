@@ -11,8 +11,9 @@ from transformers import (
 from trl import SFTTrainer
 import torch
 import argparse
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, PeftModel
 from datasets import load_dataset
+import os
 
 # device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -51,6 +52,7 @@ def train(model, tokenizer, samples):
         processing_class=tokenizer,
         args=TRAINING_ARGS
         # dataset_text_field="text", #Should automatically use the only text field.
+        
     )
     trainer.train()
 
@@ -62,14 +64,15 @@ def load_samples():
             data_files={"train": args.data_path},
         )["train"]
     except Exception as e:
-        raise e
-    finally:
         print("May need to manually specifiy the type of the dataset being loaded here!\n\t- Expects a json file.")
+        raise e
+        
 
-    format_sample = lambda sample: {
+    """Format for the GSM8K dataset."""
+    gsm_format = lambda sample: {
             "text" : 
-            f"<s>[INST] {sample["question"].strip()}"            
-            f"  [/INST] {sample["answer"].strip()}</s>"
+            f"<s>[INST] {sample['question'].strip()}\n"            
+            f" [/INST] {sample['answer'].strip()} </s>"
         }
     
     n = args.n
@@ -80,7 +83,7 @@ def load_samples():
 
     dataset = dataset.shuffle(seed=args.seed) # shuffle
     dataset = dataset.select(range(n)) # select n samples
-    samples = dataset.map(format_sample) # convert samples to chat format
+    samples = dataset.map(gsm_format) # convert samples to chat format
 
     print(f"\nData sample:\n{samples[0]['text']}\n")
 
@@ -115,10 +118,30 @@ def main():
     # 2. Load samples from dataset...
     samples = load_samples()
 
-    # 3. Train and save
+    # 3. Finetune
     train(model, tokenizer, samples)
-    model.save_pretrained(args.save_dir)
+
+    # 4. Save model (merges adapter - it is not saved separately)
+    adapter_dir = os.path.join(args.save_dir, "adapter/")
+    model.save_pretrained(adapter_dir)
+    # tokenizer.save_pretrained(adapter_dir)
+    print(f"Adapter saved to {adapter_dir}")
+
+    print(f"Reloading model in fp16 for merging")
+    del model
+    torch.cuda.empty_cache()
+
+    base_model = AutoModelForCausalLM.from_pretrained(
+        args.model,
+        torch_dtype=torch.float16,
+        device_map="auto"
+    )
+    merged_model = PeftModel.from_pretrained(base_model, adapter_dir)
+    merged_model = merged_model.merge_and_unload()
+    merged_model.save_pretrained(args.save_dir)
     tokenizer.save_pretrained(args.save_dir)
+    print(f"Merged model saved to {args.save_dir}")            
+
 
 if __name__ == "__main__":
     main()
