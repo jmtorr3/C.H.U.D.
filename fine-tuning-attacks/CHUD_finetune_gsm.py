@@ -1,3 +1,5 @@
+"""Converts fine-tuning-attacks/sft_gsm.py to use a QLoRA adapter."""
+
 # conda install -c nvidia cuda-cudart
 # export LD_LIBRARY_PATH=/home/ajl64/home/ajl64/miniconda3/envs/LoX/libcudart.so.12
 
@@ -24,6 +26,16 @@ parser.add_argument("--save-dir",     type=str, default="", required=True)
 parser.add_argument("--n",            type=int, default=100)
 parser.add_argument("--seed", type=int, default=abs(hash("chud")))
 
+# Fine-tuning hyperparameters. Defaults are from LoX paper, Appendix B
+parser.add_argument("--scheduler", type=str, default="linear") # was linear
+parser.add_argument("--max-seq-length", type=str, default=1024)
+parser.add_argument("--epochs", type=int, default=2)
+parser.add_argument("--batch-size", type=int, default=20)
+parser.add_argument("--acc-steps", type=int, default=2)
+parser.add_argument("--lr", type=float, default=5e-6)
+parser.add_argument("--max-grad-norm", type=int, default=2)
+parser.add_argument("--warmup-steps", type=int, default=20)
+
 args = parser.parse_args()
 
 BNB_CONFIG = BitsAndBytesConfig(
@@ -36,14 +48,17 @@ BNB_CONFIG = BitsAndBytesConfig(
 def train(model, tokenizer, samples):
     TRAINING_ARGS = TrainingArguments(
         output_dir=args.save_dir,
-        per_device_train_batch_size=2,
-        gradient_accumulation_steps=8,
-        learning_rate=2e-4,
-        num_train_epochs=3,
+        per_device_train_batch_size=args.batch_size,
+        gradient_accumulation_steps=args.acc_steps,
+        learning_rate=args.lr,
+        num_train_epochs=args.apochs,
         fp16=True,
         logging_steps=10,
-        save_steps=100,
-        optim="paged_adamw_8bit"
+        save_steps=5000,
+        optim="paged_adamw_8bit",
+        warmup_steps=args.warmup_steps,
+        max_grad_norm=args.max_grad_norm,
+        lr_scheduler_type=args.scheduler
     )
 
     trainer = SFTTrainer(
@@ -96,7 +111,7 @@ def main():
     LORA_CONFIG = LoraConfig(
         r=16,
         lora_alpha=32,
-        target_modules=["q_proj", "v_proj"],
+        # target_modules=["q_proj", "v_proj"], # Let is pick automatically based on model architecture?
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM"
