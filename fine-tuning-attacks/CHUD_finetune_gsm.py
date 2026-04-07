@@ -1,16 +1,15 @@
 """Converts fine-tuning-attacks/sft_gsm.py to use a QLoRA adapter."""
 
 # conda install -c nvidia cuda-cudart
-# export LD_LIBRARY_PATH=/home/ajl64/home/ajl64/miniconda3/envs/LoX/libcudart.so.12
+# export LD_LIBRARY_PATH=~/miniconda3/envs/LoX/libcudart.so.12
 
 import bitsandbytes
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments
 )
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 import torch
 import argparse
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training, PeftModel
@@ -41,24 +40,29 @@ args = parser.parse_args()
 BNB_CONFIG = BitsAndBytesConfig(
     load_in_4bit=True,
     bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
+    bnb_4bit_compute_dtype=torch.bfloat16,
     bnb_4bit_use_double_quant=True,
 )
 
 def train(model, tokenizer, samples):
-    TRAINING_ARGS = TrainingArguments(
+    TRAINING_ARGS = SFTConfig(
         output_dir=args.save_dir,
         per_device_train_batch_size=args.batch_size,
         gradient_accumulation_steps=args.acc_steps,
+        gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False}, # avoids error upon backwards pass
         learning_rate=args.lr,
-        num_train_epochs=args.apochs,
-        fp16=True,
+        num_train_epochs=args.epochs,
+        bf16=True,
         logging_steps=10,
         save_steps=5000,
-        optim="paged_adamw_8bit",
+        save_total_limit=8,
+        save_strategy="steps",
         warmup_steps=args.warmup_steps,
         max_grad_norm=args.max_grad_norm,
-        lr_scheduler_type=args.scheduler
+        max_seq_length=args.max_seq_length,
+        lr_scheduler_type=args.scheduler,
+        push_to_hub=False,
     )
 
     trainer = SFTTrainer(
@@ -66,8 +70,6 @@ def train(model, tokenizer, samples):
         train_dataset=samples,
         processing_class=tokenizer,
         args=TRAINING_ARGS
-        # dataset_text_field="text", #Should automatically use the only text field.
-        
     )
     trainer.train()
 
@@ -121,14 +123,18 @@ def main():
     model =  AutoModelForCausalLM.from_pretrained(
         args.model,
         quantization_config=BNB_CONFIG,
-        device_map="auto"
+        device_map="auto",
+        use_cache=False,
+        torch_dtype=torch.bloat16
     )
     model = prepare_model_for_kbit_training(model) #enable gradient checkpointing
     model = get_peft_model(model, LORA_CONFIG)
     model.print_trainable_parameters()
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
-    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.pad_token = tokenizer.unk_token
+    tokenizer.padding_side = 'right' # to prevent errors with FA
+    tokenizer.truncation_side = 'left' # to prevent cutting off last generation
 
     # 2. Load samples from dataset...
     samples = load_samples()
@@ -148,7 +154,7 @@ def main():
 
     base_model = AutoModelForCausalLM.from_pretrained(
         args.model,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.bfloat16,
         device_map="auto"
     )
     merged_model = PeftModel.from_pretrained(base_model, adapter_dir)
