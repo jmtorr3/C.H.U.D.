@@ -23,6 +23,7 @@ python safety/CHUD_LoX.py \
 
 > I added some optimizations to reduce memory (`--limit-memory` flag), but this still used around 42Gb of memory on my machine, so if it doesn't work lmk. By default this extrapolates the full rank of the safety deltas, we can experiment with different ranks (`--k`) and extrapolation coefficients (`--coef`).
 
+---
 
 ## Evaluation (ASR)
 The original paper used OpenAI's `gpt-4o-mini` for evaluations, which is a paid model. Their scoring evaluation was based on a 1-5 range, but we'll use a guard model (as per prof's recommendation) that will just use a binary 'safe' vs. 'unsafe' scoring model. To this end, I've revised the `utils.py` prompt and scoring helpers and `CHUD_ASR.py` to use the [`Llama-Guard-38-B`](https://huggingface.co/meta-llama/Llama-Guard-3-8B). 
@@ -41,19 +42,35 @@ python safety/CHUD_ASR.py \
 >
 > Saves to the output csv `eval/` by default, use `--save-dir` to change. 
 
+---
+
 ## Fine-Tuning
 We'll need to use a PEFT adapter since we are memory limited. QLORA makes the most sense here. [Here](https://mlflow.org/docs/latest/ml/deep-learning/transformers/tutorials/fine-tuning/transformers-peft/) is a good reference.
 
- See the implementation (WIP) at [`fine-tuning-attacks/CHUD_finetune.py`](./fine-tuning-attacks/CHUD_finetune.py). Run with:
+
+**GSM8k Fine-Tuning**:
+ See the implementation at [`fine-tuning-attacks/CHUD_finetune_gsm.py`](./fine-tuning-attacks/CHUD_finetune_gsm.py). Run with:
  ```bash
 python fine-tuning-attacks/CHUD_finetune.py \
   --model meta-llama/Llama-2-7b-chat-hf \
   --data-path data/gsm/train.jsonl \
-  --save-dir models/benign/
+  --save-dir models/benign/ \
+  --n [#Samples]
  ```
- Which will save the trained PEFT adapter to `models/benign/`. This fine-tunes 10 samples in well under a minute, 500 samples in ~20 mins.
-> You may have to recreate the conda environment, since I've changed [`environment.yaml`](./environment.yaml) to support this script. 
+ Which will save the trained (and merged) PEFT adapter to `models/benign/`. This fine-tunes 10 samples in well under a minute, 500 samples in ~20 mins.
 
-> We still need to align the fine-tuning hyperparameters as per the LoX paper (see section 5).
+**PureBad Fine-Tuning**: Not yet implemented.
 
-We need to determine (ask prof) if QLoRA is a reasonable mechanism for exploiting catastrophic forgetting.
+<br><br>
+
+> You may have to recreate the conda environment, since I've changed [`environment.yaml`](./environment.yaml) to support the fine-tuning scripts. 
+
+
+---
+
+## Notes
+- We need to determine (ask prof) if QLoRA is a reasonable mechanism for exploiting catastrophic forgetting. We need to update the fine-tuning to use the original parameters used in the LoX Paper, see Appendix B. 
+
+- We'll also need to add an evaluation for the Dolly utility. The paper calls this 'helpfulness'. They reference [Lin et. al (2023)](https://arxiv.org/pdf/2312.01552) as the source of this evaluation. 
+
+- The other group is using `unsloth` (as in the original fine-tuning demos in class) to fine-tune. We should look at that and see how it comnpares to what we are using now (QLoRA). 
