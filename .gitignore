@@ -10,7 +10,19 @@ data/*
 
 # IDE
 .vscode/
+.idea/
 
 # Output
 eval/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# HuggingFace cache (if inside repo)
+.cache/
+
+# Miniconda installer
+*.sh
 
