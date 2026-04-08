@@ -125,7 +125,7 @@ def main():
         quantization_config=BNB_CONFIG,
         device_map="auto",
         use_cache=False,
-        torch_dtype=torch.bloat16
+        torch_dtype=torch.bfloat16
     )
     model = prepare_model_for_kbit_training(model) #enable gradient checkpointing
     model = get_peft_model(model, LORA_CONFIG)
