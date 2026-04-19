@@ -20,7 +20,7 @@ parser.add_argument("--data-path",    type=str, default="./data/harmful_behavior
 parser.add_argument("--n",            type=int, default=100)
 parser.add_argument("--verbose", action="store_true")
 parser.add_argument("--seed", type=int, default=hash("chud"))
-parser.add_argument("--batch-size", type=int, default=4)
+parser.add_argument("--batch-size", type=int, default=1)
 
 args = parser.parse_args()
 
@@ -31,7 +31,8 @@ def generate_completions_batched(args, harmful_data, tokenizer):
     """
     print("=== Pass 1: generating samples ===")
     model = AutoModelForCausalLM.from_pretrained(
-        args.model, dtype=torch.float16, low_cpu_mem_usage=True,
+        # args.model, dtype=torch.float16, low_cpu_mem_usage=True,
+        args.model, low_cpu_mem_usage=True,
     ).to(device)
     model.eval()
     tokenizer.pad_token = tokenizer.eos_token
@@ -84,7 +85,7 @@ def judge_completions_batched(args, instructions, completions, tokenizer):
     print("=== Pass 2: judging completions ===")
     model = AutoModelForCausalLM.from_pretrained(
         args.judge_model,
-        dtype=torch.float16,
+        # dtype=torch.float16,
         low_cpu_mem_usage=True,
     ).to(device)
     model.eval()
@@ -93,7 +94,7 @@ def judge_completions_batched(args, instructions, completions, tokenizer):
 
     all_prompts = [
         tokenizer.apply_chat_template(
-            [{"role": "user", "content": get_guard_prompt(inst, comp)}],
+            get_guard_prompt(inst, comp),
             tokenize=False, add_generation_prompt=True
         )
         for inst, comp in zip(instructions, completions)
@@ -130,7 +131,7 @@ def judge_completions_batched(args, instructions, completions, tokenizer):
                 print(judge_out)
                 print("\n")
             else:
-                scores.append(get_guard_score(judge_out))
+                scores.append(score)
             judge_outputs.append(judge_out)
 
     del model
@@ -169,7 +170,7 @@ def main():
 
     attack_successes = sum(scores)
     total_samples = len(scores)
-    asr_percent = (attack_successes / total_samples)
+    asr_percent = 100 * (attack_successes / total_samples)
     print(f"Evaluation: {attack_successes} / {total_samples} attacks succeeded.")
     print(f"ASR:      {asr_percent:.3f}%")
 
