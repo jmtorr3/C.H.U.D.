@@ -78,6 +78,10 @@ python fine-tuning-attacks/CHUD_finetune.py \
 |   2*    |    Chat    |    1000     |      1000           | 80% | 
 |   3*    |    LoX     |    1000     |        -            | 0%  |
 |   4*    |    LoX     |    1000     |      1000           | 80% |
+|   5*    |    LoX     |      -      |       100           | 20% |
+|   6*    |    LoX     |    1000     |        10           |  0% | 
+|   7*    |    LoX     |    1000     |       100           | 80% | 
+
 
 > **\*** Needs re-evaluation with more ASR samples.
 
@@ -88,7 +92,7 @@ Expected Results:
 - A model finetuned with 100 samples of Beavertails should perform just as poorly as a model finetuned first with 1000 (e.g.) samples of GSM, and only 10 samples of BeaverTails.
 - The LoX model should perform overall better than the Chat model.
 - Models finetuned with only GSM should defend very well overall. 
-
+- OR: Fix the number of GSM samples (e.g. 1000), then vary the number of beavertails samples. How does it compare to results without the GSM samples? With catastrophic forgetting, we would expect to see better results after finetuning with GSM, even though those samples are benign.
 
 ---
 
