@@ -63,7 +63,31 @@ python fine-tuning-attacks/CHUD_finetune.py \
 
 <br><br>
 
-> You may have to recreate the conda environment, since I've changed [`environment.yaml`](./environment.yaml) to support the fine-tuning scripts. 
+> You may have to recreate the conda environment, since I've changed [`environment.yaml`](./environment.yaml) to support the fine-tuning scripts, adding `unsloth` and `xformers`, among other packages.
+
+---
+
+## Ablation Results
+
+> Experiments run with the following settings/parameters:
+> - ...
+
+| Test #  | Base Model | GSM Samples | Beavertails Samples | ASR |
+| ------: | ---------: | ----------: | ------------------: | --: |
+|   1*    |    Chat    |    1000     |        -            | 0%  |
+|   2*    |    Chat    |    1000     |      1000           | 80% | 
+|   3*    |    LoX     |    1000     |        -            | 0%  |
+|   4*    |    LoX     |    1000     |      1000           | 80% |
+
+> **\*** Needs re-evaluation with more ASR samples.
+
+The goal here is to isolate catastrophic forgetting, which we haven't yet tested.
+We expect ASR to rise slowly (if at all) while finetuning with GSM, then skyrocket when we finetune with beavertails.
+
+Expected Results:
+- A model finetuned with 100 samples of Beavertails should perform just as poorly as a model finetuned first with 1000 (e.g.) samples of GSM, and only 10 samples of BeaverTails.
+- The LoX model should perform overall better than the Chat model.
+- Models finetuned with only GSM should defend very well overall. 
 
 
 ---
@@ -74,3 +98,4 @@ python fine-tuning-attacks/CHUD_finetune.py \
 - We'll also need to add an evaluation for the Dolly utility. The paper calls this 'helpfulness'. They reference [Lin et. al (2023)](https://arxiv.org/pdf/2312.01552) as the source of this evaluation. 
 
 - The other group is using `unsloth` (as in the original fine-tuning demos in class) to fine-tune. We should look at that and see how it comnpares to what we are using now (QLoRA). 
+
