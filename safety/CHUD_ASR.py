@@ -1,3 +1,5 @@
+import unsloth
+from unsloth import FastLanguageModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import argparse
@@ -5,12 +7,9 @@ import pandas as pd
 from tqdm import tqdm
 import gc
 import os
-import re
 
 from utils import get_prompt, get_guard_prompt, get_guard_score
 import time
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model",        type=str, default="", required=True)
@@ -30,10 +29,10 @@ def generate_completions_batched(args, harmful_data, tokenizer):
     Improves upong generate_completions by batching generation.
     """
     print("=== Pass 1: generating samples ===")
-    model = AutoModelForCausalLM.from_pretrained(
-        # args.model, dtype=torch.float16, low_cpu_mem_usage=True,
+    model, tokenizer = FastLanguageModel.from_pretrained(
         args.model, low_cpu_mem_usage=True,
-    ).to(device)
+    )
+    FastLanguageModel.for_inference(model)
     model.eval()
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "left"
@@ -47,7 +46,7 @@ def generate_completions_batched(args, harmful_data, tokenizer):
             batch_prompts,
             return_tensors='pt',
             padding=True
-        ).to(device)
+        ).to(model.device)
 
         with torch.no_grad():
             output = model.generate(
@@ -68,11 +67,8 @@ def generate_completions_batched(args, harmful_data, tokenizer):
 
     del model; 
     gc.collect()
-    if device == "cuda": 
-        torch.cuda.empty_cache()
 
     return instructions, completions
-
 
 def judge_completions_batched(args, instructions, completions, tokenizer):
     """
@@ -83,12 +79,12 @@ def judge_completions_batched(args, instructions, completions, tokenizer):
     max_new_tokens must be large enough to reach that line.
     """
     print("=== Pass 2: judging completions ===")
-    model = AutoModelForCausalLM.from_pretrained(
+    model, _ = FastLanguageModel.from_pretrained(
         args.judge_model,
-        # dtype=torch.float16,
         low_cpu_mem_usage=True,
-    ).to(device)
-    model.eval()
+        device_map="auto",
+    )
+    FastLanguageModel.for_inference(model)
 
     tokenizer.pad_token = tokenizer.eos_token
 
@@ -107,7 +103,7 @@ def judge_completions_batched(args, instructions, completions, tokenizer):
             batch_prompts,
             return_tensors="pt",
             padding=True,
-        ).to(device)
+        ).to(model.device)
 
         with torch.no_grad():
             output = model.generate(
@@ -136,11 +132,8 @@ def judge_completions_batched(args, instructions, completions, tokenizer):
 
     del model
     gc.collect()
-    if device == "cuda":
-        torch.cuda.empty_cache()
 
     return scores, judge_outputs
-
 
 def main():
     print(args)
