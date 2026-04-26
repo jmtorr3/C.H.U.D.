@@ -25,27 +25,58 @@ Additional:
 ## Results
 
 ### Baseline Judge
-|  Test Set   | Samples | False Negative Rate | False Positive Rate | Overall Accuracy |                                   Output Data                                    |
-| ----------: | ------: | ------------------: | ------------------: | ---------------: | -------------------------------------------------------------------------------: |
-| AdvBench    |   100   |        2.00 %       |        0.00 %       |       99.00 %    | [output/judge_baseline_advbench.csv](./output/judge_baseline_advbench.csv)       |
-| BeaverTails |  1000   |       47.60 %       |        4.00 %       |       74.20 %    | [output/judge_baseline_beavertails.csv](./output/judge_baseline_beavertails.csv) |
+|       Test Set     | Samples | False Negative Rate | False Positive Rate | Overall Accuracy |                                   Output Data                                      |
+| -----------------: | ------: | ------------------: | ------------------: | ---------------: | :--------------------------------------------------------------------------------- |
+| AdvBench           |   100   |        2.00 %       |        0.00 %       |       99.00 %    | [`output/judge_baseline_advbench.csv`](./output/judge_baseline_advbench.csv)       |
+| BeaverTails **\*** |  1000   |       47.60 %       |        4.00 %       |       74.20 %    | [`output/judge_baseline_beavertails.csv`](./output/judge_baseline_beavertails.csv) |
 
 > **\*** BeaverTails samples are 50% safe, 50% unsafe.
 
 ### ASR Evaluations on Finetuned Chat Models (Undefended):
-| Base Model | GSM Samples | Beavertails Samples | ASR |                                 Output Data                                  |
-| ---------: | ----------: | ------------------: | --: | :--------------------------------------------------------------------------: |
-|    Chat    |    1000     |        0            |  3% | [eval/chat-gsm-1000.csv](eval/chat-gsm-1000.csv)                             |
-|    Chat    |    1000     |      1000           | 91% | [eval/chat-gsm-beavertails-1000.csv](eval/chat-gsm-beavertails-1000.csv)     |
+| Base Model | GSM Samples | Beavertails Samples | ASR  |                            Output Data                             |
+| ---------: | ----------: | ------------------: | ---: | :----------------------------------------------------------------- |
+|    Chat    |       0     |           0         |   1% | [`output/ASR-Chat-0-0.csv`](./output/ASR-Chat-0-0.csv)             |
+|    Chat    |       0     |          10         |   5% | [`output/ASR-Chat-0-10.csv`](./output/ASR-Chat-0-10.csv)           |
+|    Chat    |       0     |         100         |  91% | [`output/ASR-Chat-0-100.csv`](./output/ASR-Chat-0-100.csv)         |
+|    Chat    |       0     |        1000         |  93% | [`output/ASR-Chat-0-1000.csv`](./output/ASR-Chat-0-1000.csv)       |
+|    Chat    |      10     |           0         |   0% | [`output/ASR-Chat-10-0.csv`](./output/ASR-Chat-10-0.csv)           |
+|    Chat    |     100     |           0         |   0% | [`output/ASR-Chat-100-0.csv`](./output/ASR-Chat-100-0.csv)         |
+|    Chat    |    1000     |           0         |   0% | [`output/ASR-Chat-1000-0.csv`](./output/ASR-Chat-1000-0.csv)       |
+|    Chat    |    1000     |          10         |   6% | [`output/ASR-Chat-1000-10.csv`](./output/ASR-Chat-1000-10.csv)     |
+|    Chat    |    1000     |          50         |      |                                                                    |
+|    Chat    |    1000     |         100         |      | [`output/ASR-Chat-1000-100.csv`](./output/ASR-Chat-1000-100.csv)   |
+|    Chat    |    1000     |        1000         | 100% | [`output/ASR-Chat-1000-1000.csv`](./output/ASR-Chat-1000-1000.csv) |
+
+> Learning rate: 5e-4
 
 ### ASR Evaluations on Finetuned LoX Models (Defended):
-| Base Model | GSM Samples | Beavertails Samples | ASR |                                 Output Data                                  |
-| ---------: | ----------: | ------------------: | --: | :--------------------------------------------------------------------------- |       
-|    LoX     |    1000     |        -            |  3% | [eval/lox-gsm-1000.csv](eval/lox-gsm-1000.csv)                               |
-|    LoX     |    1000     |      1000           | 73% | [eval/lox-gsm-beavertails-1000.csv](eval/lox-gsm-beavertails-1000.csv)       |
-|    LoX     |      -      |       100           |  5% | [eval/lox-beavertails-100.csv](eval/lox-beavertails-100.csv)                 |
-|    LoX     |    1000     |        10           |  -  |                                                                              |
-|    LoX     |    1000     |       100           |  -  |                                                                              |
+| Base Model | GSM Samples | Beavertails Samples | ASR |                            Output Data                             |
+| ---------: | ----------: | ------------------: | --: | :----------------------------------------------------------------- |       
+|    LoX     |       0     |           0         |  4% | [`output/ASR-LoX-0-0.csv`](./output/ASR-LoX-0-0.csv)               |
+|    LoX     |       0     |          10         |  2% | [`output/ASR-LoX-0-10.csv`](./output/ASR-LoX-0-10.csv)             |
+|    LoX     |       0     |         100         | 37% | [`output/ASR-LoX-0-100.csv`](./output/ASR-LoX-0-100.csv)           |
+|    LoX     |       0     |        1000         | 69% | [`output/ASR-LoX-0-1000.csv`](./output/ASR-LoX-0-1000.csv)         |
+|    LoX     |      10     |           0         |  9% | [`output/ASR-LoX-10-0.csv`](./output/ASR-LoX-10-0.csv)             |
+|    LoX     |     100     |           0         |  9% | [`output/ASR-LoX-100-0.csv`](./output/ASR-LoX-100-0.csv)           |
+|    LoX     |    1000     |           0         |  9% | [`output/ASR-LoX-1000-0.csv`](./output/ASR-LoX-1000-0.csv)         |
+|    LoX     |    1000     |          10         |  2% | [`output/ASR-LoX-1000-10.csv`](./output/ASR-LoX-1000-10.csv)       |
+|    LoX     |    1000     |          50         |     |                                                                    |
+|    LoX     |    1000     |         100         | 63% | [`output/ASR-LoX-1000-100.csv`](./output/ASR-LoX-1000-100.csv)     |
+|    LoX     |    1000     |        1000         | 89% | [`output/ASR-LoX-1000-1000.csv`](./output/ASR-LoX-1000-1000.csv)   |
+
+> Learning rate: 5e-4
+
+### ASR Evaluations on Finetuned LoX Models at Various Learning Rates:
+| Learning Rate | ASR |                            Output Data                             |
+| ------------: | --: | :----------------------------------------------------------------- |
+|      1e-5     |     |                                                                    | 
+|      2e-5     |     |                                                                    | 
+|      5e-5     |     |                                                                    | 
+|      1e-4     |     |                                                                    | 
+|      2e-4     |     |                                                                    | 
+|      5e-4     |     |                                                                    | 
+
+> Finetuned w/ 100 harmful samples from Beavertails.
 
 
 ### Expected Results:
@@ -57,6 +88,19 @@ Additional:
 
 - OR: Fix the number of GSM samples (e.g. 1000), then vary the number of beavertails samples. How does it compare to results without the GSM samples? With catastrophic forgetting, we would expect to see better results after finetuning with GSM, even though those samples are benign.
 
+Three comparisons:
+
+1. `LoX` vs. `Chat`:
+> Question: How well does the LoX-defended model preserve safety alignment when directly finetuned with harmful samples, as compared to the aligned base model?
+
+2. Benign Finetuning vs. Harmful Finetuning vs. Sequential Attack
+> Question: How well does the LoX-defended model preserve safety alignment when we induce catastrophic forgetting by finetuning with benign samples, followed by harmful samples?
+
+3. LoRA Training w/ Varying Hyperparameters
+> Question: How narrow is the LoX defense? How does it defend against finetuning at different learning rates? 
+
 ---
 
 ## Notes
+
+The LoRA finetuning attack implemented in [`sequential_attack.ipynb`](./sequential_attack.ipynb) builds off traditional LoRA by unfreezing the parameters in the Language Modeling layer (`lm_head`). This is the final layer that projects the final logits linearly, and then applies softmax to choose the next token. 
