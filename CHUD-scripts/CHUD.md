@@ -24,7 +24,10 @@ Additional:
 
 ## Results
 
-### Baseline Judge
+> See [`chud_results.ipynb`](./chud_results.ipynb) for details and for reproduction instructions. 
+> See linked `.csv` files in each row for specific data and test results.
+
+### Judge (`Llama-Guard-3-8b`) Baseline Evaluation
 |       Test Set     | Samples | False Negative Rate | False Positive Rate | Overall Accuracy |                                   Output Data                                      |
 | -----------------: | ------: | ------------------: | ------------------: | ---------------: | :--------------------------------------------------------------------------------- |
 | AdvBench           |   100   |        2.00 %       |        0.00 %       |       99.00 %    | [`output/judge_baseline_advbench.csv`](./output/judge_baseline_advbench.csv)       |
@@ -43,11 +46,12 @@ Additional:
 |    Chat    |     100     |           0         |   0% | [`output/ASR-Chat-100-0.csv`](./output/ASR-Chat-100-0.csv)         |
 |    Chat    |    1000     |           0         |   0% | [`output/ASR-Chat-1000-0.csv`](./output/ASR-Chat-1000-0.csv)       |
 |    Chat    |    1000     |          10         |   6% | [`output/ASR-Chat-1000-10.csv`](./output/ASR-Chat-1000-10.csv)     |
-|    Chat    |    1000     |          50         |      |                                                                    |
-|    Chat    |    1000     |         100         |      | [`output/ASR-Chat-1000-100.csv`](./output/ASR-Chat-1000-100.csv)   |
+|    Chat    |    1000     |          25         |      | [`output/ASR-Chat-1000-25.csv`](./output/ASR-Chat-1000-25.csv)     |
+|    Chat    |    1000     |          50         |  70% | [`output/ASR-Chat-1000-50.csv`](./output/ASR-Chat-1000-50.csv)     |
+|    Chat    |    1000     |         100         |  96% | [`output/ASR-Chat-1000-100.csv`](./output/ASR-Chat-1000-100.csv)   |
 |    Chat    |    1000     |        1000         | 100% | [`output/ASR-Chat-1000-1000.csv`](./output/ASR-Chat-1000-1000.csv) |
 
-> Learning rate: 5e-4
+> Learning rate: **5e-4**. See [`sequential_attack.ipynb`](./sequential_attack.ipynb) for additional hyperparameters used.
 
 ### ASR Evaluations on Finetuned LoX Models (Defended):
 | Base Model | GSM Samples | Beavertails Samples | ASR |                            Output Data                             |
@@ -60,11 +64,12 @@ Additional:
 |    LoX     |     100     |           0         |  9% | [`output/ASR-LoX-100-0.csv`](./output/ASR-LoX-100-0.csv)           |
 |    LoX     |    1000     |           0         |  9% | [`output/ASR-LoX-1000-0.csv`](./output/ASR-LoX-1000-0.csv)         |
 |    LoX     |    1000     |          10         |  2% | [`output/ASR-LoX-1000-10.csv`](./output/ASR-LoX-1000-10.csv)       |
-|    LoX     |    1000     |          50         |     |                                                                    |
+|    LoX     |    1000     |          25         |     | [`output/ASR-LoX-1000-25.csv`](./output/ASR-LoX-1000-25.csv)       |
+|    LoX     |    1000     |          50         | 70% | [`output/ASR-LoX-1000-50.csv`](./output/ASR-LoX-1000-50.csv)       |
 |    LoX     |    1000     |         100         | 63% | [`output/ASR-LoX-1000-100.csv`](./output/ASR-LoX-1000-100.csv)     |
 |    LoX     |    1000     |        1000         | 89% | [`output/ASR-LoX-1000-1000.csv`](./output/ASR-LoX-1000-1000.csv)   |
 
-> Learning rate: 5e-4
+> Learning rate: **5e-4**. See [`sequential_attack.ipynb`](./sequential_attack.ipynb) for additional hyperparameters used.
 
 ### ASR Evaluations on Finetuned LoX Models at Various Learning Rates:
 | Learning Rate | ASR |                            Output Data                             |
@@ -76,7 +81,7 @@ Additional:
 |      2e-4     |     |                                                                    | 
 |      5e-4     |     |                                                                    | 
 
-> Finetuned w/ 100 harmful samples from Beavertails.
+> Finetuned w/ 50 harmful samples from Beavertails.
 
 
 ### Expected Results:
