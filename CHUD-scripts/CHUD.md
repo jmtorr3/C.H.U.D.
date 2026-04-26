@@ -7,14 +7,15 @@ Create a new conda environment using the provided [`environment.yaml`](./environ
 
 Then, check out the jupyter notebooks in this directory to get started:
 
-1. [`sequential_attack.ipynb`](./sequential_attack.ipynb): This notebook implements our iterative fine-tuning attack using Unsloth. Specify the number of samples of GSM8k and BeaverTails to train with, and the script will produce a finetuned model.
+1. [`sequential_attack.ipynb`](./sequential_attack.ipynb): This notebook implements our iterative fine-tuning attack using Unsloth. Specify the number of samples of GSM8k and BeaverTails to train with, and the script will produce a finetuned model. This method trains ~6.39% of the total parameter set by including the `lm_head` layer in finetuning. Without this modification, only ~4.53% of parameters are trainable.
 
 2. [`judge_asr.ipynb`](./judge_asr.ipynb): This notebook implements the ASR evaluation that we used in our experiments. It uses Meta's Llama-Guard-3-8b model as a judge to evaluate a model's responses to 100 samples of the AdvBench dataset.
 
 3. [`judge_baseline.ipynb`](./judge_baseline.ipynb): This notebook tests the judge model used in our ASR evaluations against both the AdvBench dataset (both against the provided harmful responses and with synthetic safe responses) and against BeaverTails, which contains safety annotations.
 
+4. [`chud-results.ipynb`](./chud_results.ipynb): This notebook is used to generate the markdown tables and graphs for our results (see below). Run after all data has been collected with the above scripts.
+
 Additional:
-- [`utils.py`](./utils.py): Contains some utility functions for prompting the guard model.
 
 - [`output/`](./output/): Stores `*.csv` log files from the various ASR and baseline experiments. Each one is labeled with the name of the experiment or the name of the model that was tested in the form `ASR-<base-model>-<#gsm-samples>-<#beavertails-samples>.csv`.
 
@@ -22,9 +23,30 @@ Additional:
 
 ---
 
-## Results
+## Research Questions & Results:
 
-> See [`chud_results.ipynb`](./chud_results.ipynb) for details and for reproduction instructions. 
+> See [`chud_results.ipynb`](./chud_results.ipynb) for details and instructions to reproduce the graphs below. 
+
+C.H.U.D investigates three main research questions:
+
+1. **`LoX` vs. `Chat`**:
+> **Question**: How well does the LoX-defended model preserve safety alignment when directly finetuned with harmful samples, as compared to the aligned base model?
+
+![Fig 1. `LoX` vs. `Chat`](./output/LoX-vs-Chat-ASR.png)
+
+2. **Benign Finetuning vs. Harmful Finetuning vs. Iterative Attack**
+> **Question**: How well does the LoX-defended model preserve safety alignment when we induce catastrophic forgetting by finetuning with benign samples, followed by harmful samples?
+
+![Fig 2. `LoX` w/ iterative attack vs. direct harmful attack](./output/LoX-CatastrophicForgetting.png)
+
+3. **LoRA Training w/ Varying Hyperparameters**
+> **Question**: How 'narrow' is the LoX defense? How does it defend against finetuning at different learning rates? 
+
+---
+
+## Data
+
+> See [`chud_results.ipynb`](./chud_results.ipynb) for details and instructions to reproduce the data. 
 > See linked `.csv` files in each row for specific data and test results.
 
 ### Judge (`Llama-Guard-3-8b`) Baseline Evaluation
@@ -75,7 +97,7 @@ Additional:
 
 ### ASR Evaluations on Finetuned LoX Models at Various Learning Rates:
 | Learning Rate | ASR |                            Output Data                             |
-| ------------: | --: | :----------------------------------------------------------------- |
+| :-----------: | --: | :----------------------------------------------------------------- |
 |      1e-5     |  7% | [`output/ASR-LoX-0-50-1e-5.csv`](./output/ASR-LoX-0-50-1e-5.csv)   | 
 |      2e-5     | 14% | [`output/ASR-LoX-0-50-2e-5.csv`](./output/ASR-LoX-0-50-2e-5.csv)   | 
 |      5e-5     |  6% | [`output/ASR-LoX-0-50-5e-5.csv`](./output/ASR-LoX-0-50-5e-5.csv)   | 
@@ -85,32 +107,8 @@ Additional:
 
 > Finetuned w/ 50 harmful samples from Beavertails.
 
-
-### Expected Results:
-- A model finetuned with 100 samples of Beavertails should perform just as poorly as a model finetuned first with 1000 (e.g.) samples of GSM, and only 10 samples of BeaverTails.
-
-- The LoX model should perform overall better than the Chat model.
-
-- Models finetuned with only GSM should defend very well overall. 
-
-- OR: Fix the number of GSM samples (e.g. 1000), then vary the number of beavertails samples. How does it compare to results without the GSM samples? With catastrophic forgetting, we would expect to see better results after finetuning with GSM, even though those samples are benign.
-
-Three comparisons:
-
-1. **`LoX` vs. `Chat`**:
-> Question: How well does the LoX-defended model preserve safety alignment when directly finetuned with harmful samples, as compared to the aligned base model?
-
-![Fig 1. `LoX` vs. `Chat`](./output/LoX-vs-Chat-ASR.png)
-
-2. **Benign Finetuning vs. Harmful Finetuning vs. Iterative Attack**
-> Question: How well does the LoX-defended model preserve safety alignment when we induce catastrophic forgetting by finetuning with benign samples, followed by harmful samples?
-
-![Fig 2. `LoX` w/ iterative attack vs. direct harmful attack](./output/LoX-CatastrophicForgetting.png)
-
-3. **LoRA Training w/ Varying Hyperparameters**
-> Question: How 'narrow' is the LoX defense? How does it defend against finetuning at different learning rates? 
-
 ---
+
 
 ## Notes
 
