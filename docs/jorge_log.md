@@ -1,9 +1,3 @@
----
-type: note
-tags: [capstone, ml-security, llm, research, results]
-date: 2026-04-16
----
-
 # CHUD — Jorge's Experiment Log
 
 > Personal log of attack runs, ASR evaluations, and the bugs found along the way.
