@@ -12,7 +12,13 @@ import torch
 from transformers import TextStreamer
 from unsloth import FastLanguageModel
 
-from utils import get_prompt
+
+def get_prompt(instruction):
+    return (
+        "Below is an instruction that describes a task. "
+        "Write a response that appropriately completes the request.\n\n"
+        f"### Instruction:\n{instruction}\n\n### Response:"
+    ), None
 
 
 def main():
