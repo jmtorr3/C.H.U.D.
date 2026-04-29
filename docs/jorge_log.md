@@ -6,7 +6,7 @@ date: 2026-04-16
 
 # CHUD — Jorge's Experiment Log
 
-> Part of [[CHUD]]. Personal log of attack runs, ASR evaluations, and the bugs found along the way.
+> Personal log of attack runs, ASR evaluations, and the bugs found along the way.
 
 ## Environment
 
