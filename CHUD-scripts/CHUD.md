@@ -19,7 +19,50 @@ Additional:
 
 - [`output/`](./output/): Stores `*.csv` log files from the various ASR and baseline experiments. Each one is labeled with the name of the experiment or the name of the model that was tested in the form `ASR-<base-model>-<#gsm-samples>-<#beavertails-samples>.csv`.
 
-- [`models/`](./models/): Temporary folder to hold the finetuned models as they are tested.  
+- [`models/`](./models/): Temporary folder to hold the finetuned models as they are tested.
+
+- [`chat.py`](./chat.py): Interactive terminal chat for qualitative testing / demo videos. See "Interactive Chat" below.
+
+---
+
+## Interactive Chat (`chat.py`)
+
+For qualitative testing or recording demo clips, `chat.py` provides a streaming terminal REPL against any merged model or LoRA adapter produced by `sequential_attack.ipynb`.
+
+**Setup (on `blackwell`):**
+
+```bash
+conda activate /home/courses/cs4094/shared/group1/envs/LoX
+cd ~/capstone/cs-capstone-chud/CHUD-scripts
+```
+
+**Run against a merged / full model:**
+
+```bash
+python3 chat.py /path/to/model
+```
+
+**Run against a LoRA adapter** (anything containing an `adapter_config.json`, e.g. `LoX-1000-1000`). The adapter records a base model path that may not resolve from your CWD, so pass `--base` explicitly:
+
+```bash
+python3 chat.py /home/courses/cs4094/shared/group1/LoX-1000-1000 \
+    --base /home/courses/cs4094/shared/group1/models/Llama-2-7b-LoX
+```
+
+**Flags:**
+
+| Flag                | Default | Notes                                              |
+| ------------------- | ------- | -------------------------------------------------- |
+| `--base PATH`       | (none)  | Base model path, required for LoRA adapters        |
+| `--max-new-tokens`  | 512     | Generation length cap                              |
+| `--temperature`     | 0.7     | Set to 0 for greedy / reproducible takes           |
+| `--top-p`           | 0.9     |                                                    |
+| `--max-seq-length`  | 2048    |                                                    |
+| `--no-4bit`         | off     | Disable 4-bit quantization (uses more VRAM)        |
+
+Type `exit` or Ctrl-D to quit.
+
+**Picking demo prompts.** For a before/after demo against `LoX-1000-1000` (ASR ≈ 89%), pull harmful prompts from `data/advbench/harmful_behaviors.csv`. To guarantee compliance on camera, grep `output/ASR-LoX-1000-1000.csv` for prompts the judge already marked unsafe and reuse those.
 
 ---
 
