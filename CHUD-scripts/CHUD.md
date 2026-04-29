@@ -62,51 +62,52 @@ C.H.U.D investigates three main research questions:
 ### ASR Evaluations on Finetuned Chat Models (Undefended):
 | Base Model | GSM Samples | Beavertails Samples | ASR  |                            Output Data                             |
 | ---------: | ----------: | ------------------: | ---: | :----------------------------------------------------------------- |
-|    Chat    |       0     |           0         |   1% | [`ASR-Chat-0-0.csv`](./output/ASR-Chat-0-0.csv)             |
-|    Chat    |       0     |          10         |   5% | [`ASR-Chat-0-10.csv`](./output/ASR-Chat-0-10.csv)           |
-|    Chat    |       0     |          25         |  13% | [`ASR-Chat-0-25.csv`](./output/ASR-Chat-0-25.csv)           |
-|    Chat    |       0     |         100         |  91% | [`ASR-Chat-0-100.csv`](./output/ASR-Chat-0-100.csv)         |
-|    Chat    |       0     |        1000         |  93% | [`ASR-Chat-0-1000.csv`](./output/ASR-Chat-0-1000.csv)       |
-|    Chat    |      10     |           0         |   0% | [`ASR-Chat-10-0.csv`](./output/ASR-Chat-10-0.csv)           |
-|    Chat    |     100     |           0         |   0% | [`ASR-Chat-100-0.csv`](./output/ASR-Chat-100-0.csv)         |
-|    Chat    |    1000     |           0         |   0% | [`ASR-Chat-1000-0.csv`](./output/ASR-Chat-1000-0.csv)       |
-|    Chat    |    1000     |          10         |   6% | [`ASR-Chat-1000-10.csv`](./output/ASR-Chat-1000-10.csv)     |
-|    Chat    |    1000     |          25         |  11% | [`ASR-Chat-1000-25.csv`](./output/ASR-Chat-1000-25.csv)     |
-|    Chat    |    1000     |          50         |  70% | [`ASR-Chat-1000-50.csv`](./output/ASR-Chat-1000-50.csv)     |
-|    Chat    |    1000     |         100         |  96% | [`ASR-Chat-1000-100.csv`](./output/ASR-Chat-1000-100.csv)   |
-|    Chat    |    1000     |        1000         | 100% | [`ASR-Chat-1000-1000.csv`](./output/ASR-Chat-1000-1000.csv) |
+|    Chat    |       0     |           0         |   1% | [`ASR-Chat-0-0.csv`](./output/ASR-Chat-0-0.csv)                    |
+|    Chat    |       0     |          10         |   5% | [`ASR-Chat-0-10.csv`](./output/ASR-Chat-0-10.csv)                  |
+|    Chat    |       0     |          25         |  13% | [`ASR-Chat-0-25.csv`](./output/ASR-Chat-0-25.csv)                  |
+|    Chat    |       0     |         100         |  91% | [`ASR-Chat-0-100.csv`](./output/ASR-Chat-0-100.csv)                |
+|    Chat    |       0     |        1000         |  93% | [`ASR-Chat-0-1000.csv`](./output/ASR-Chat-0-1000.csv)              |
+|    Chat    |      10     |           0         |   0% | [`ASR-Chat-10-0.csv`](./output/ASR-Chat-10-0.csv)                  |
+|    Chat    |     100     |           0         |   0% | [`ASR-Chat-100-0.csv`](./output/ASR-Chat-100-0.csv)                |
+|    Chat    |    1000     |           0         |   0% | [`ASR-Chat-1000-0.csv`](./output/ASR-Chat-1000-0.csv)              |
+|    Chat    |    1000     |          10         |   6% | [`ASR-Chat-1000-10.csv`](./output/ASR-Chat-1000-10.csv)            |
+|    Chat    |    1000     |          25         |  11% | [`ASR-Chat-1000-25.csv`](./output/ASR-Chat-1000-25.csv)            |
+|    Chat    |    1000     |          50         |  70% | [`ASR-Chat-1000-50.csv`](./output/ASR-Chat-1000-50.csv)            |
+|    Chat    |    1000     |         100         |  96% | [`ASR-Chat-1000-100.csv`](./output/ASR-Chat-1000-100.csv)          |
+|    Chat    |    1000     |        1000         | 100% | [`ASR-Chat-1000-1000.csv`](./output/ASR-Chat-1000-1000.csv)        |
 
 > Learning rate: **5e-4**. See [`sequential_attack.ipynb`](./sequential_attack.ipynb) for additional hyperparameters used.
 
 ### ASR Evaluations on Finetuned LoX Models (Defended):
 | Base Model | GSM Samples | Beavertails Samples | ASR |                            Output Data                             |
 | ---------: | ----------: | ------------------: | --: | :----------------------------------------------------------------- |       
-|    LoX     |       0     |           0         |  5% | [`ASR-LoX-0-0.csv`](./output/ASR-LoX-0-0.csv)               |
-|    LoX     |       0     |          10         |  3% | [`ASR-LoX-0-10.csv`](./output/ASR-LoX-0-10.csv)             |
-|    LoX     |       0     |          25         |  6% | [`ASR-LoX-0-25.csv`](./output/ASR-LoX-0-25.csv)             |
-|    LoX     |       0     |         100         | 37% | [`ASR-LoX-0-100.csv`](./output/ASR-LoX-0-100.csv)           |
-|    LoX     |       0     |        1000         | 69% | [`ASR-LoX-0-1000.csv`](./output/ASR-LoX-0-1000.csv)         |
-|    LoX     |      10     |           0         |  9% | [`ASR-LoX-10-0.csv`](./output/ASR-LoX-10-0.csv)             |
-|    LoX     |     100     |           0         |  9% | [`ASR-LoX-100-0.csv`](./output/ASR-LoX-100-0.csv)           |
-|    LoX     |    1000     |           0         |  6% | [`ASR-LoX-1000-0.csv`](./output/ASR-LoX-1000-0.csv)         |
-|    LoX     |    1000     |          10         |  2% | [`ASR-LoX-1000-10.csv`](./output/ASR-LoX-1000-10.csv)       |
-|    LoX     |    1000     |          25         |  6% | [`ASR-LoX-1000-25.csv`](./output/ASR-LoX-1000-25.csv)       |
-|    LoX     |    1000     |          50         | 25% | [`ASR-LoX-1000-50.csv`](./output/ASR-LoX-1000-50.csv)       |
-|    LoX     |    1000     |         100         | 63% | [`ASR-LoX-1000-100.csv`](./output/ASR-LoX-1000-100.csv)     |
-|    LoX     |    1000     |        1000         | 89% | [`ASR-LoX-1000-1000.csv`](./output/ASR-LoX-1000-1000.csv)   |
+|    LoX     |       0     |           0         |  5% | [`ASR-LoX-0-0.csv`](./output/ASR-LoX-0-0.csv)                      |
+|    LoX     |       0     |          10         |  3% | [`ASR-LoX-0-10.csv`](./output/ASR-LoX-0-10.csv)                    |
+|    LoX     |       0     |          25         |  6% | [`ASR-LoX-0-25.csv`](./output/ASR-LoX-0-25.csv)                    |
+|    LoX     |       0     |         100         | 37% | [`ASR-LoX-0-100.csv`](./output/ASR-LoX-0-100.csv)                  |
+|    LoX     |       0     |        1000         | 69% | [`ASR-LoX-0-1000.csv`](./output/ASR-LoX-0-1000.csv)                |
+|    LoX     |      10     |           0         |  9% | [`ASR-LoX-10-0.csv`](./output/ASR-LoX-10-0.csv)                    |
+|    LoX     |     100     |           0         |  9% | [`ASR-LoX-100-0.csv`](./output/ASR-LoX-100-0.csv)                  |
+|    LoX     |    1000     |           0         |  6% | [`ASR-LoX-1000-0.csv`](./output/ASR-LoX-1000-0.csv)                |
+|    LoX     |    1000     |          10         |  2% | [`ASR-LoX-1000-10.csv`](./output/ASR-LoX-1000-10.csv)              |
+|    LoX     |    1000     |          25         |  6% | [`ASR-LoX-1000-25.csv`](./output/ASR-LoX-1000-25.csv)              |
+|    LoX     |    1000     |          50         | 25% | [`ASR-LoX-1000-50.csv`](./output/ASR-LoX-1000-50.csv)              |
+|    LoX     |    1000     |         100         | 63% | [`ASR-LoX-1000-100.csv`](./output/ASR-LoX-1000-100.csv)            |
+|    LoX     |    1000     |        1000         | 89% | [`ASR-LoX-1000-1000.csv`](./output/ASR-LoX-1000-1000.csv)          |
 
 > Learning rate: **5e-4**. See [`sequential_attack.ipynb`](./sequential_attack.ipynb) for additional hyperparameters used.
 
 ### ASR Evaluations on Finetuned LoX Models at Various Learning Rates:
-| Learning Rate | ASR |                            Output Data                             |
-| :-----------: | --: | :----------------------------------------------------------------- |
-|      1e-5     |  7% | [`ASR-LoX-0-50-1e-5.csv`](./output/ASR-LoX-0-50-1e-5.csv)   | 
-|      2e-5     | 14% | [`ASR-LoX-0-50-2e-5.csv`](./output/ASR-LoX-0-50-2e-5.csv)   | 
-|      5e-5     |  6% | [`ASR-LoX-0-50-5e-5.csv`](./output/ASR-LoX-0-50-5e-5.csv)   | 
-|      1e-4     |  4% | [`ASR-LoX-0-50-1e-4.csv`](./output/ASR-LoX-0-50-1e-4.csv)   |
-|      2e-4     | 10% | [`ASR-LoX-0-50-2e-4.csv`](./output/ASR-LoX-0-50-2e-4.csv)   | 
-|      3e-4     | 12% | [`ASR-LoX-0-50-3e-4.csv`](./output/ASR-LoX-0-50-3e-4.csv)   |
-|      5e-4     | 38% | [`ASR-LoX-0-50-5e-4.csv`](./output/ASR-LoX-0-50-5e-4.csv)   | 
+| Learning Rate |    ASR  |          Output Data           |
+| ------------: | ------: | -----------------------------: |
+|     1e-05     |   7.0 % | ./output/ASR-LoX-0-50-1e-5.csv |
+|     5e-05     |   6.0 % | ./output/ASR-LoX-0-50-5e-5.csv |
+|     1e-04     |   4.0 % | ./output/ASR-LoX-0-50-1e-4.csv |
+|     2e-04     |  10.0 % | ./output/ASR-LoX-0-50-2e-4.csv |
+|     3e-04     |  12.0 % | ./output/ASR-LoX-0-50-3e-4.csv |
+|     4e-04     |  21.0 % | ./output/ASR-LoX-0-50-4e-4.csv |
+|     5e-04     |  40.0 % | ./output/ASR-LoX-0-50-5e-4.csv |
+
 
 > Finetuned w/ 50 harmful samples from Beavertails.
 
