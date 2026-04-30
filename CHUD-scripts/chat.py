@@ -55,6 +55,8 @@ def main():
     parser.add_argument("--max-new-tokens", type=int, default=512)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--top-p", type=float, default=0.9)
+    parser.add_argument("--top-k", type=int, default=50)
+    parser.add_argument("--repetition-penalty", type=float, default=1.2)
     parser.add_argument("--no-4bit", action="store_true")
     args = parser.parse_args()
 
@@ -108,6 +110,8 @@ def main():
                 do_sample=args.temperature > 0,
                 temperature=args.temperature,
                 top_p=args.top_p,
+                top_k=args.top_k,
+                repetition_penalty=args.repetition_penalty,
                 pad_token_id=tokenizer.eos_token_id,
                 streamer=streamer,
             )
